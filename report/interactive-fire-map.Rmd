@@ -1,0 +1,53 @@
+---
+title: "2020 West Coast Wildfires"
+author: "R. Chris Berg"
+date: "9/10/2020"
+output: 
+  html_document:
+    theme: yeti
+---
+
+```{r setup, include=FALSE}
+
+library(geojsonio)
+library(rnaturalearth)
+library(tidyverse)
+library(sf)
+library(leaflet)
+
+west_coast <-
+  ne_states( country = "united states of america" , 
+             returnclass = "sf" ) %>%
+  filter( name %in% c("California","Oregon","Washington") )
+
+fire_areas <- 
+  geojson_read(
+    "https://opendata.arcgis.com/datasets/5da472c6d27b4b67970acc7b5044c862_0.geojson", 
+    what = "sp"
+  ) %>%
+  st_as_sf()
+
+```
+
+This is meant to be a resource for looking at the location and extent of the severe wildfires on the United States West coast during the summer of 2020. The map is interactive, using [Leaflet](https://leafletjs.com/) and data from the [National Interagency Fire Center](https://data-nifc.opendata.arcgis.com/datasets/wildfire-perimeters) made available on ArcGIS, and covers the whole United States.
+
+## Interactive Map
+
+Click-and-drag to move around the map, and use the mouse wheel/buttons to zoom. Click on one of the fire shapes to see how many acres it's estimated to cover.
+
+Updated as of `r Sys.time()`
+
+```{r map, echo=F, warning=F, message=F}
+fire_areas %>%
+  leaflet(width = "100%") %>%
+  addProviderTiles(provider = "CartoDB.Positron") %>%
+  addPolygons(
+    popup = ~paste0(IncidentName, "<br>", "Area (acres): ", prettyNum(GISAcres, big.mark=",")),
+    stroke = FALSE,
+    smoothFactor = 0,
+    fillOpacity = 0.7,
+    color = "#F8766D"
+  ) %>% 
+  setView(lat=44, lng=-123, zoom=7 )
+```
+
