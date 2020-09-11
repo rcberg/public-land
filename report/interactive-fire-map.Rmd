@@ -23,11 +23,11 @@ fire_areas <-
 
 ```
 
-This is meant to be a resource for looking at the location and extent of the severe wildfires on the United States West coast during the summer of 2020. The map is interactive, using [Leaflet](https://leafletjs.com/) and data from the [National Interagency Fire Center](https://data-nifc.opendata.arcgis.com/datasets/wildfire-perimeters) made available on ArcGIS, and covers the whole United States.
+This is meant to be a resource for looking at the location and extent of the severe wildfires on the United States West coast during the summer of 2020. The map is fully interactive, thanks to [Leaflet](https://leafletjs.com/) and data from the [National Interagency Fire Center](https://data-nifc.opendata.arcgis.com/datasets/wildfire-perimeters) made available through ArcGIS. It covers the entire United States.
 
 ## Interactive Map
 
-Click-and-drag to move around the map, and use the mouse wheel/buttons to zoom. Click on one of the fire shapes to see how many acres it's estimated to cover.
+Click-and-drag to move around the map, and use your mouse wheel or touchpad to zoom. Click on one of the fire shapes to see how many acres it covers.
 
 Updated as of `r Sys.time()`
 
