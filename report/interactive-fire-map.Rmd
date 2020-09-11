@@ -4,21 +4,15 @@ author: "R. Chris Berg"
 date: "9/10/2020"
 output: 
   html_document:
-    theme: yeti
+    theme: darkly
 ---
 
 ```{r setup, include=FALSE}
 
 library(geojsonio)
-library(rnaturalearth)
 library(tidyverse)
 library(sf)
 library(leaflet)
-
-west_coast <-
-  ne_states( country = "united states of america" , 
-             returnclass = "sf" ) %>%
-  filter( name %in% c("California","Oregon","Washington") )
 
 fire_areas <- 
   geojson_read(
