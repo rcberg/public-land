@@ -12,6 +12,7 @@ output:
 library(geojsonio)
 library(jsonlite)
 library(tidyverse)
+library(lubridate)
 library(sf)
 library(leaflet)
 library(viridis)
@@ -26,15 +27,16 @@ fire_areas <-
   ) %>%
   st_as_sf()
 
-gmt_s <- lubridate::hour(Sys.time()) + 6
-gmt_f <- gmt_s+1
-date <- Sys.Date()
+gmt <- hour(Sys.time()) + 7
+date <- if_else( gmt > 23 , 
+                ymd(Sys.Date() + days(1) ),
+                ymd(Sys.Date()) )
 
 startdate_str <- paste( paste0("?startDate=",date) ,
-                        gmt_s,
+                        gmt%%24,
                         sep="T")
 enddate_str <- paste( paste0("&endDate=",date) ,
-                        gmt_f,
+                        gmt%%24,
                         sep="T")
 
 url_str <- paste0("http://www.airnowapi.org/aq/data/",
