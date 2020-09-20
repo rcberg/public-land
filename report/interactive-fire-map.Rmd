@@ -33,7 +33,7 @@ date <- if_else( gmt > 23 ,
                 ymd(Sys.Date()) )
 
 startdate_str <- paste( paste0("?startDate=",date) ,
-                        gmt%%24,
+                        (gmt-1)%%24,
                         sep="T")
 enddate_str <- paste( paste0("&endDate=",date) ,
                         gmt%%24,
