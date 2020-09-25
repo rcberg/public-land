@@ -1,0 +1,101 @@
+---
+title: "2020 West Coast Wildfires"
+author: "R. Chris Berg"
+date: <br>`r format(Sys.Date(), '%d %B %Y') `
+output: 
+  html_document:
+    theme: darkly
+---
+
+```{r setup, include=FALSE}
+
+library(geojsonio)
+library(jsonlite)
+library(tidyverse)
+library(lubridate)
+library(sf)
+library(leaflet)
+library(viridis)
+
+```
+
+```{r data, include=F}
+fire_areas <- 
+  geojson_read(
+    "https://opendata.arcgis.com/datasets/5da472c6d27b4b67970acc7b5044c862_0.geojson", 
+    what = "sp"
+  ) %>%
+  st_as_sf()
+
+gmt <- hour(Sys.time()) + 7
+date <- if_else( gmt > 23 , 
+                ymd(Sys.Date() + days(1) ),
+                ymd(Sys.Date()) )
+
+startdate_str <- paste( paste0("?startDate=",date) ,
+                        (gmt-1)%%24,
+                        sep="T")
+enddate_str <- paste( paste0("&endDate=",date) ,
+                        gmt%%24,
+                        sep="T")
+
+url_str <- paste0("http://www.airnowapi.org/aq/data/",
+                  startdate_str,
+                  enddate_str , 
+                  "&parameters=OZONE,PM25,PM10,CO,NO2,SO2&BBOX=-126,15,-60.22,60&dataType=A&format=application/json&verbose=0&nowcastonly=1&includerawconcentrations=0&API_KEY=",
+                  Sys.getenv("AIRNOW_API_KEY"))
+
+aqi_point <- 
+  fromJSON(url_str) %>%
+  st_as_sf( coords = c("Longitude","Latitude"),
+            crs = st_crs("epsg:4326") ) %>% 
+  filter( AQI > 0 ) %>%
+  select(AQI, geometry)
+
+```
+
+This is meant to be a resource for looking at the location and extent of the severe wildfires on the United States West coast during the summer of 2020. The map is fully interactive, thanks to [Leaflet](https://leafletjs.com/) and data from the [National Interagency Fire Center](https://data-nifc.opendata.arcgis.com/datasets/wildfire-perimeters) made available through ArcGIS. It covers the entire United States.
+
+## Interactive Map
+
+Click-and-drag to move around the map, and use your mouse wheel or touchpad to zoom. Click on one of the fire shapes to see how many acres it covers, or click on one of the (circle) air quality markers to see the Air Quality Index at that sensor.
+
+Updated as of `r Sys.time()`
+
+```{r map, echo=F, warning=F, message=F}
+
+color_pal <- 
+  colorBin(palette = "plasma" ,
+           reverse = T , 
+           domain = aqi_point$AQI , 
+           bins = c(0,50,100,150,200,250,max(aqi_point$AQI))
+           )
+
+fire_areas %>%
+  st_transform(crs = "+init=epsg:4326") %>%
+  leaflet(width = "100%") %>%
+  addProviderTiles(provider = "CartoDB.Positron") %>%
+  addPolygons(
+    popup = ~paste0(IncidentName, "<br>", "Area (acres): ", prettyNum(GISAcres, big.mark=",")),
+    stroke = FALSE,
+    smoothFactor = 0,
+    fillOpacity = 0.8,
+    color = "#F8766D"
+  ) %>% 
+  addCircleMarkers( data = aqi_point , 
+                    fillColor = ~color_pal(AQI) , 
+                    radius = ~log(AQI) , 
+                    popup = ~paste0("Air quality index: ",AQI) , 
+                    stroke = F,
+                    fillOpacity = 0.3) %>%
+  addLegend(
+    "bottomright", 
+    data = aqi_point ,
+    pal = color_pal , 
+    values = ~AQI,
+    title = "Air Quality Index (AQI)",
+    opacity = 1 
+    ) %>%
+  setView(lat=44, lng=-123, zoom=7 )
+```
+
